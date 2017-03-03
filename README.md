@@ -11,3 +11,6 @@ Access application by visiting http://localhost:8000 locally
 
 questions or comments may be submitted to kenm@eurekapayments.com
 NOTE:  CSS was copied from class file
+
+special thanks to swooding for forum help and harry and renee for 1 on 1 assistance
+Note:  CSS was largely copied from class lecture as as was sections of the program
