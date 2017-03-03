@@ -108,6 +108,7 @@ def gconnect():
 
     data = answer.json()
 
+
     login_session['username'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
@@ -120,13 +121,13 @@ def gconnect():
 
     output = ''
     output += '<h1>Welcome, '
-    output += login_session['username']
+    output += login_session['email']
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
     output += ' " style = "width: 300px; height: 300px;border-radius:\
      150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    flash("you are now logged in as %s" % login_session['username'])
+    flash("you are now logged in as %s" % login_session['email'])
     print "done!"
     return output
 
@@ -156,38 +157,41 @@ def getUserID(email):
 
  # DISCONNECT - Revoke a current user's token and reset their login_session
 
-
 @app.route('/gdisconnect')
 def gdisconnect():
-    print login_session.keys()
-    access_token = login_session['access_token']
-    print 'In gdisconnect access token is %s', access_token
-    print 'User name is: ' 
-    print login_session['username']
-    if access_token is None:
-        print 'Access Token is None'
-        response = make_response(json.dumps('Current user not connected.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
-    h = httplib2.Http()
-    result = h.request(url, 'GET')[0]
-    print 'result is '
-    print result
-    if result['status'] == '200':
-        del login_session['access_token'] 
-        del login_session['gplus_id']
-        del login_session['username']
-        del login_session['email']
-        del login_session['picture']
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    else:
-    
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
-        response.headers['Content-Type'] = 'application/json'
-        return response
+    try:
+        print login_session.keys()
+        access_token = login_session['access_token']
+        print 'In gdisconnect access token is %s', access_token
+        print 'User name is: ' 
+        print login_session['email']
+        if access_token is None:
+            print 'Access Token is None'
+            response = make_response(json.dumps('Current user not connected.'), 401)
+            response.headers['Content-Type'] = 'application/json'
+            return response
+        url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+        h = httplib2.Http()
+        result = h.request(url, 'GET')[0]
+        print 'result is '
+        print result
+        if result['status'] == '200':
+            del login_session['access_token'] 
+            del login_session['gplus_id']
+            del login_session['username']
+            del login_session['email']
+            del login_session['picture']
+            response = make_response(json.dumps('Successfully disconnected.'), 200)
+            response.headers['Content-Type'] = 'application/json'
+            return response
+        else:
+        
+            response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+            response.headers['Content-Type'] = 'application/json'
+            return response
+    except:
+        return redirect(url_for('showLogin'))
+
 
 # JSON APIs to view Salesrep and detail info
 @app.route('/salesreps/repdetails/JSON')
@@ -212,7 +216,10 @@ def salesRepsJSON():
 @app.route('/salesreps/')
 def showSalesReps():
     salesreps = session.query(SalesReps).order_by(asc(SalesReps.name))
-    return render_template('salesreps.html', salesreps=salesreps)
+    if 'username' not in login_session:
+        return render_template('publicsalesreps.html', salesreps=salesreps)
+    else:
+        return render_template('salesreps.html', salesreps=salesreps)
 
 # Create a new sales rep
 @app.route('/salesreps/new/', methods=['GET', 'POST'])
@@ -237,6 +244,11 @@ def editSalesRep(salesrep_id):
         return redirect('/login')
     editedSalesRep = session.query(
         SalesReps).filter_by(id=salesrep_id).one()
+    if 'username' not in login_session:
+        return redirect('/login')
+    if editedSalesRep.user_id != login_session['user_id']:
+        return "<script>function myFunction() {alert('You are not \
+        authorized to edit this SalesRep.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         if request.form['name']:
             editedSalesRep.name = request.form['name']
@@ -254,6 +266,9 @@ def deleteSalesRep(salesrep_id):
         return redirect('/login')
     repToDelete = session.query(
         SalesReps).filter_by(id=salesrep_id).one()
+    if repToDelete.user_id !=login_session['user_id']:
+        return "<script>function myFunction() {alert('You are not \
+        authorized to delete this SalesRep.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         session.delete(repToDelete)
         flash('%s Successfully Deleted' % repToDelete.name)
@@ -267,14 +282,18 @@ def deleteSalesRep(salesrep_id):
 @app.route('/salesreps/<int:salesrep_id>/repdetails')
 def showRep(salesrep_id):
     salesrep = session.query(SalesReps).filter_by(id=salesrep_id).one()
-    #creator=getUserInfo(salesrep.user_id)
+    creator=getUserInfo(salesrep.user_id)
     details = session.query(RepDetails).filter_by(
         salesrep_id=salesrep_id).all()
-    addmessage=""
-    if len(details)>=1:
-    	addmessage= "Rep Details below. Delete or edit details to modify"
-    return render_template('repdetails.html', salesrep=salesrep, details=details,
-    	addmessage=addmessage) #creator=creator)
+    if 'username' not in login_session:
+        return render_template('publicrepdetails.html', salesrep=salesrep, 
+            details=details)
+    else:
+        addmessage=""
+        if len(details)>=1:
+            addmessage= "Rep Details below. Delete or edit details to modify"
+        return render_template('repdetails.html', salesrep=salesrep, details=details,
+        	addmessage=addmessage)
 
 
 # Add Rep Details
@@ -284,6 +303,9 @@ def addRepDetails(salesrep_id):
         return redirect('/login')
     salesrep = session.query(SalesReps).filter_by(id=salesrep_id).one()
     salesrepdetails=session.query(RepDetails).filter_by(salesrep_id=salesrep_id).all()
+    if login_session['user_id']!=salesrep.user_id:
+        return "<script>function myFunction() {alert('You are not authorized \
+        to add Rep Details.');}</script><body onload='myFunction()''>"
     if request.method == 'POST' and len(salesrepdetails)<1:
         newItem = RepDetails(name=salesrep.name, payout=request.form[
                    'payout'], sub_reps=request.form['sub_reps'], 
@@ -308,6 +330,9 @@ def editRepDetails(salesrep_id):
         return redirect('/login')
     salesrep = session.query(SalesReps).filter_by(id=salesrep_id).one()
     details=session.query(RepDetails).filter_by(salesrep_id=salesrep_id).all()
+    if login_session['user_id']!=salesrep.user_id:
+        return "<script>function myFunction() {alert('You are not authorized \
+        to edit Rep Details.');}</script><body onload='myFunction()''>"
     for i in details:
         if request.method == 'POST':
             if request.form['payout']:
@@ -333,6 +358,9 @@ def deleteRepDetails(salesrep_id):
         return redirect('/login')
     salesrep = session.query(SalesReps).filter_by(id=salesrep_id).one()
     details=session.query(RepDetails).filter_by(salesrep_id=salesrep_id).first()
+    if login_session['user_id']!=salesrep.user_id:
+        return "<script>function myFunction() {alert('You are not authorized \
+        to delete Rep Details.');}</script><body onload='myFunction()''>"
     if request.method == 'POST':
         session.delete(details)
         flash('Successfully Deleted Details for %s' % salesrep.name)
