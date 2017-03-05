@@ -340,7 +340,7 @@ def deleteSalesRep(salesrep_id):
 @app.route('/salesreps/<int:salesrep_id>/')
 @app.route('/salesreps/<int:salesrep_id>/repdetails')
 def showRep(salesrep_id):
-    salesrep = session.query(SalesReps).filter_by(id=salesrep_id).one()
+    salesrep = session.query(SalesReps).filter_by(id=salesrep_id).first()
     creator = getUserInfo(salesrep.user_id)
     details = \
         session.query(RepDetails).filter_by(salesrep_id=salesrep_id).all()
@@ -354,6 +354,7 @@ def showRep(salesrep_id):
                 'Rep Details below. Delete or edit details to modify'
         return render_template('repdetails.html', salesrep=salesrep,
                                details=details, addmessage=addmessage)
+
 
 
 # Add Rep Details

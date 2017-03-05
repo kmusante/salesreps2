@@ -45,7 +45,7 @@ class RepDetails(Base):
     id = Column(Integer, primary_key = True)
     salesrep_id = Column(Integer, ForeignKey('sales_reps.id')) 
     #look inside sales_reps table and retrieve id number
-    salesrep= relationship(SalesReps)
+    salesrep= relationship(SalesReps, single_parent=True, cascade='all, delete-orphan')
     user_id=Column(Integer, ForeignKey('user.id'))
     user=relationship(User)
 
