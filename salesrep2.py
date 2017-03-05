@@ -28,7 +28,8 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
-# client ID 353588693515-3441mau5vnq11kvco9kmnhk9o7lg2bc5.apps.googleusercontent.com
+# client ID:
+# 353588693515-3441mau5vnq11kvco9kmnhk9o7lg2bc5.apps.googleusercontent.com
 # client secret lUqBbBB-BfSe4IMPinOeNqor
 # create a state token to prevent request fraud
 # store it in the session for later validation
@@ -84,7 +85,7 @@ def gconnect():
         'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' \
         % access_token
     h = httplib2.Http()
-    result = json.loads(h.request(url, 'GET')[1])
+    result = json.loads(h.request(url, 'GET')[1].decode("utf8"))
 
     # If there was an error in the access token info, abort.
 
@@ -177,7 +178,7 @@ def createUser(login_session):
 # if user_id is passed in it returns user which was queried
 
 def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
+    user = session.query(User).filter_by(id=user_id).first()
     return user
 
 
@@ -343,19 +344,21 @@ def showRep(salesrep_id):
     salesrep = session.query(SalesReps).filter_by(id=salesrep_id).first()
     creator = getUserInfo(salesrep.user_id)
     details = \
-        session.query(RepDetails).filter_by(salesrep_id=salesrep_id).all()
+        session.query(RepDetails).filter_by(salesrep_id=salesrep_id)
     if 'username' not in login_session:
         return render_template('publicrepdetails.html',
                                salesrep=salesrep, details=details)
     else:
         addmessage = ''
-        if len(details) >= 1:
+        if details:
             addmessage = \
                 'Rep Details below. Delete or edit details to modify'
-        return render_template('repdetails.html', salesrep=salesrep,
-                               details=details, addmessage=addmessage)
-
-
+            return render_template('repdetails.html', salesrep=salesrep,
+                               details=details, addmessage=addmessage,
+                               salesrep_id=salesrep_id)
+        else:
+            return render_template('repdetails.html', salesrep=salesrep,
+                                addmessage=addmessage, salesrep_id=salesrep_id)
 
 # Add Rep Details
 
@@ -445,7 +448,7 @@ def deleteRepDetails(salesrep_id):
         session.delete(details)
         flash('Successfully Deleted Details for %s' % salesrep.name)
         session.commit()
-        return redirect(url_for('showRep', salesrep_id=salesrep_id))
+        return redirect(url_for('showSalesReps', salesrep_id=salesrep_id))
     else:
         return render_template('deleteRepDetails.html',
                                salesrep_id=salesrep_id,

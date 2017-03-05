@@ -17,7 +17,7 @@
 	</div>
 
 <div class = 'flash'>
-		      {% with messages = get_flashed_messages() %}
+	{% with messages = get_flashed_messages() %}
       {% if messages %}
           
         <ul>
@@ -25,7 +25,7 @@
             <li> <strong> {{ message }} </strong> </li>
         {% endfor %}
         </ul>
-        {% endif %}
+      {% endif %}
     {% endwith %}
 
 </div>
@@ -46,7 +46,7 @@
 		<a href="{{url_for('showRep', salesrep_id=rep.id)}}">
 			<div class="row">
 				<div class="col-md-1"></div>
-					<div class="col-md-10 restaurant-list">
+					<div class="col-md-10">
 						<h3>{{rep.name}}</h3>
 					</div>
 				<div class="col-md-1"></div>

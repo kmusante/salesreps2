@@ -1,20 +1,19 @@
 <div class="row top-menu">
 	<div class="col-md-6">
-		<div class="row top-menu">
-		<div class="col-md-6">
-			<a href="{{url_for('showSalesReps')}}">
-				<span class="glyphicon glyphicon-home" aria-hidden="true"></span>Show All Sales Reps
-			</a>
-		
-		</div>
+		<a href="{{url_for('showSalesReps')}}">
+			<span class="glyphicon glyphicon-home" aria-hidden="true"></span>Show All Sales Reps
+		</a>
+	</div>
+	<div class="col-md-6">
 		<div class="center">
-					<p><a href="{{url_for('showLogin')}}">
-					<span class="glyphicon glyphicon-log-in" aria-hidden="true"></span>Login</a></p>
+			{% if 'username' not in session %}
+				<a href="{{url_for('showLogin')}}">
+					<span class="glyphicon glyphicon-log-in" aria-hidden="true"></span>Login</a>
+			{% else %}
+				<a href="{{url_for('gdisconnect')}}">
+					<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>Logout</a>
+			{% endif %}
 		
 		</div>
-		<div class="right">
-					<p><a href="{{url_for('gdisconnect')}}">
-					<span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>Logout</a></p>
-		
-		</div>
+	</div>	
 </div>
