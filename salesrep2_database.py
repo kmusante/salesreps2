@@ -63,8 +63,8 @@ class RepDetails(Base):
 
  
 
-
-engine = create_engine(
-	'sqlite:///salesreptwo.db') #points to database we will use
+engine = create_engine('postgresql://catalog:catalog@localhost/catalog')
+# engine = create_engine(
+#	'sqlite:///salesreptwo.db') #points to database we will use
 
 Base.metadata.create_all(engine)
