@@ -21,7 +21,8 @@ APPLICATION_NAME = 'salesreps python project'
 
 # Connect to Database and create database session
 
-engine = create_engine('sqlite:///salesreptwo.db')
+engine = create_engine('postgresql://catalog:catalog@localhost/catalog')
+# engine = create_engine('sqlite:///salesreptwo.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
